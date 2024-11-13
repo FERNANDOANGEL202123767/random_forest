@@ -15,7 +15,6 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import json
-from dotenv import load_dotenv
 import logging
 
 # Configuración del logger
@@ -24,44 +23,23 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Intentar cargar .env si existe, pero no fallar si no está
-load_dotenv(override=True)
+# Credenciales de Google definidas directamente
+GOOGLE_CREDENTIALS = {
+    "type": "service_account",
+    "project_id": "plated-entry-439816-k7",
+    "private_key_id": "b1a0cc9cbd7054ff31c705668515a4a3ce8ab96c",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCzJBoL4f2mP4oj\nHxIIInTh5yiv1Nc5KSAYcYPTt4JBbCWuelGSc7QdGYAyXFqgN88+pXMP8Q6W3veu\nzaqxeQeRKXMZQ0YUFKzTFGRay0vPR2TolwV8yyAwHqdw2QIQs/+w4VLdf6CG8bzQ\n+R/0+RNG0S1vYmspAcq2cf4v0wYdMD/uxX52oLwl4aC0cmQyoca9DhgLbkzZAfkb\nW2z3wQHuRuN6x3ysvFXjB75yOAvDo5NFQgPXGQvVFwn08retpUj39fRBc2UOFJrF\njII9zCYaYc0+0nEEBpKwS/jOY3ifZXO58pMGQ5EHdqB1hpd5CXnJDXmJnQdrdPRW\nGKAj/nLhAgMBAAECggEAH86R6li0nPNMr1o5rSSTDLYqqPeZRC6rYnOrRKjhUYTm\nduGEgMSW7xDDTI3N0INAQp8FPEggf0S1BP5C57J1174cj9h8RZ37JppJDD7q5bGH\nNu3znToCq9CRic2aGoWfKVSEjkv2IGelDxSgqjIcTFdhIhT/Ml99UuIQEAU/oWhO\nUILYEYXWrG2dQF5DLNCZ9iR0zjpu/KRXWyBmarxs4H4KtGtkcv0s3ejTAppG0L43\nAbR8A47c37Z++L7ysZdqlwzG7neMzyhUpH758hWB6kVJ/au/frYQU4yA8Ch3zchr\nxqnI3bkuicCWXALwjofCA9PIACakrfz5PGcQCdg9zQKBgQDzilRPPkd8qFKIDiCw\nwNOuMEkDALZ48uDgdGcbWRl6MujQAu6JnGntNrToDUYohx95y20KRj0+/bnnRYR3\nN2WGHppGLuZddyjlNB8w8vj+YbJAF4a6ltNSKmKKdHx6NrdoGKiZQlaybQ9jznDC\nbBsQHZkt2nldFhl6MaozGV9VHQKBgQC8TlQTkDKRO11wFwU7le8wa5WXItYHf7Bm\ndk5nO2HFQd+CjbgSsnotbLjl8zguHRrDMsV8xjIBBiwQwVoDT7rSImsTNSQhzcDR\nmDvE0zjAjmnQ4c2Fbtfq1dTUAU88tT8lhFXZgHi4Gq2imXi4wN6galf3+Y1H97L0\nvynNlgI9lQKBgQDMjSH1EOUwMZxoRB129+6TfmDEkeOxQKZaP8qeML7yYTIkDGJX\n2LUrlWhrA0MrJRrtzEvAdnBYqPls43m4PCIcfTWsvxWj6ULDCH0uOtWhq2Lw7BGw\nRKAnggwUKHSona58U0HAv/Rblrh3ZtxUoEI2zfVrivWmlro9ZNuEYcotjQKBgCpa\n3/RqicU6+iBdPTMS3XMhr8sH7eZP5UiWsbnslGg/EdwWrmGePXb8Lnaih29v4nYn\ndF5FYjfywHSgWPPHujjLvxPZ7x+fXRCH0mHKNMiy/8AZGhY6QVyz7iQli0IXbnWs\n13aNvBmE/qtFI+9CipDAerrvKcUXROxiFzAD3sslAoGAMINn2ErpoFSspTWEyqZ6\n3xovvCaJES3tEDO/f7xBf47y+o6wqL/QEaWOo8mpBQsc7kOqkgEbfwUPJHiJlpEi\nWeGdrlIQC2R/HJm8Y2pZblawdKPnZvVkOFMm41lIAdkaekfOFLypJOza6AfZIr2v\nVck9wUlB/RLLTScNJHtw3qo=\n-----END PRIVATE KEY-----\n",
+    "client_email": "render@plated-entry-439816-k7.iam.gserviceaccount.com",
+    "client_id": "100754834905337102848",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/render%40plated-entry-439816-k7.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+}
 
-# Obtener credenciales ya sea del .env o de variables de entorno
-def get_google_credentials():
-    try:
-        # Primero intentar obtener las credenciales como JSON string
-        creds_str = os.getenv('GOOGLE_CREDENTIALS')
-        if creds_str:
-            return json.loads(creds_str)
-        
-        # Si no hay credenciales completas, intentar construirlas desde variables individuales
-        creds_dict = {
-            "type": os.getenv('GOOGLE_TYPE', 'service_account'),
-            "project_id": os.getenv('GOOGLE_PROJECT_ID'),
-            "private_key_id": os.getenv('GOOGLE_PRIVATE_KEY_ID'),
-            "private_key": os.getenv('GOOGLE_PRIVATE_KEY', '').replace('\\n', '\n'),
-            "client_email": os.getenv('GOOGLE_CLIENT_EMAIL'),
-            "client_id": os.getenv('GOOGLE_CLIENT_ID'),
-            "auth_uri": os.getenv('GOOGLE_AUTH_URI', 'https://accounts.google.com/o/oauth2/auth'),
-            "token_uri": os.getenv('GOOGLE_TOKEN_URI', 'https://oauth2.googleapis.com/token'),
-            "auth_provider_x509_cert_url": os.getenv('GOOGLE_AUTH_PROVIDER_CERT_URL', 'https://www.googleapis.com/oauth2/v1/certs'),
-            "client_x509_cert_url": os.getenv('GOOGLE_CLIENT_CERT_URL')
-        }
-        
-        # Verificar que todas las claves necesarias tienen valor
-        if not all([creds_dict['private_key'], creds_dict['client_email']]):
-            raise ValueError("Faltan credenciales de Google obligatorias")
-            
-        return creds_dict
-    except Exception as e:
-        logger.error(f"Error obteniendo credenciales de Google: {str(e)}")
-        raise
-
-# Usar la función en lugar de acceder directamente a GOOGLE_CREDENTIALS
-GOOGLE_CREDENTIALS = get_google_credentials()
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-FILE_ID = '10TT3lXJFz3zN5WNAtXQFdKki6qjE5LJ0'  # Reemplazar con el ID del archivo en Drive
+FILE_ID = '10TT3lXJFz3zN5WNAtXQFdKki6qjE5LJ0'  # Reemplazar con el ID de tu archivo
 
 def obtener_servicio_drive():
     """Inicializar el servicio de Google Drive"""
@@ -220,7 +198,6 @@ def train_model():
         plt.savefig(img_buffer, format='png', dpi=300, bbox_inches='tight')
         img_buffer.seek(0)
         plt.close()
-        
         img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
         
         response = {
