@@ -110,7 +110,7 @@ def action(action):
             X_train_scaled = DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index)
             data_scaled_head = X_train_scaled.head(10).to_html()
             
-            return jsonify({"message": "Dataset dividido y escalado", "scaled_data": data_scaled_head})
+            return jsonify({"message": "Dataset dividido y escal ado", "scaled_data": data_scaled_head})
         
         elif action == 'train_tree':
             train_set, val_set, test_set = train_val_test_split(df)
@@ -203,3 +203,6 @@ def train_model():
     except Exception as e:
         logger.error(f"Error en el entrenamiento del modelo: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
