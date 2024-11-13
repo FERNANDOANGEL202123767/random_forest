@@ -61,7 +61,7 @@ def get_google_credentials():
 # Usar la función en lugar de acceder directamente a GOOGLE_CREDENTIALS
 GOOGLE_CREDENTIALS = get_google_credentials()
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-FILE_ID = '1zQrcso79Dvms0Qeq4IsZ643PbNh8j3At'  # Reemplazar con el ID del archivo en Drive
+FILE_ID = '10TT3lXJFz3zN5WNAtXQFdKki6qjE5LJ0'  # Reemplazar con el ID del archivo en Drive
 
 def obtener_servicio_drive():
     """Inicializar el servicio de Google Drive"""
