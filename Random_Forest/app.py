@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request, render_template, send_file
 import pandas as pd
 import numpy as np
@@ -10,7 +11,6 @@ from pandas import DataFrame
 import matplotlib.pyplot as plt
 import io
 import base64
-import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
@@ -24,11 +24,42 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Cargar las variables del archivo .env
-load_dotenv()
+# Intentar cargar .env si existe, pero no fallar si no está
+load_dotenv(override=True)
 
-# Obtener las credenciales de Google desde el archivo .env
-GOOGLE_CREDENTIALS = json.loads(os.getenv('GOOGLE_CREDENTIALS'))
+# Obtener credenciales ya sea del .env o de variables de entorno
+def get_google_credentials():
+    try:
+        # Primero intentar obtener las credenciales como JSON string
+        creds_str = os.getenv('GOOGLE_CREDENTIALS')
+        if creds_str:
+            return json.loads(creds_str)
+        
+        # Si no hay credenciales completas, intentar construirlas desde variables individuales
+        creds_dict = {
+            "type": os.getenv('GOOGLE_TYPE', 'service_account'),
+            "project_id": os.getenv('GOOGLE_PROJECT_ID'),
+            "private_key_id": os.getenv('GOOGLE_PRIVATE_KEY_ID'),
+            "private_key": os.getenv('GOOGLE_PRIVATE_KEY', '').replace('\\n', '\n'),
+            "client_email": os.getenv('GOOGLE_CLIENT_EMAIL'),
+            "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+            "auth_uri": os.getenv('GOOGLE_AUTH_URI', 'https://accounts.google.com/o/oauth2/auth'),
+            "token_uri": os.getenv('GOOGLE_TOKEN_URI', 'https://oauth2.googleapis.com/token'),
+            "auth_provider_x509_cert_url": os.getenv('GOOGLE_AUTH_PROVIDER_CERT_URL', 'https://www.googleapis.com/oauth2/v1/certs'),
+            "client_x509_cert_url": os.getenv('GOOGLE_CLIENT_CERT_URL')
+        }
+        
+        # Verificar que todas las claves necesarias tienen valor
+        if not all([creds_dict['private_key'], creds_dict['client_email']]):
+            raise ValueError("Faltan credenciales de Google obligatorias")
+            
+        return creds_dict
+    except Exception as e:
+        logger.error(f"Error obteniendo credenciales de Google: {str(e)}")
+        raise
+
+# Usar la función en lugar de acceder directamente a GOOGLE_CREDENTIALS
+GOOGLE_CREDENTIALS = get_google_credentials()
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 FILE_ID = '12CKEe1qAXXcUgQj0Xj2IRZbvbysE00aU'  # Reemplazar con el ID del archivo en Drive
 
@@ -110,7 +141,7 @@ def action(action):
             X_train_scaled = DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index)
             data_scaled_head = X_train_scaled.head(10).to_html()
             
-            return jsonify({"message": "Dataset dividido y escal ado", "scaled_data": data_scaled_head})
+            return jsonify({"message": "Dataset dividido y escalado", "scaled_data": data_scaled_head})
         
         elif action == 'train_tree':
             train_set, val_set, test_set = train_val_test_split(df)
