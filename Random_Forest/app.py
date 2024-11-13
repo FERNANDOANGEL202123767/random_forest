@@ -1,31 +1,24 @@
-import os
 from google.colab import drive
 drive.mount('/content/drive')
 
 import os
-
-data_dir = '/content/drive/MyDrive/Colab Notebooks'
-
 import pandas as pd
 
-df = pd.read_csv(os.path.join(data_dir, 'TotalFeatures-ISCXFlowMeter.csv'))
-import os
-from flask import Flask, jsonify, request, render_template, send_file
-import pandas as pd
-import numpy as np
+# Configuración para cargar el archivo desde Google Drive
+file_id = '1zuJ0fML1HvJ6YWCFj_0_VJW0B9FfilpQ'
+download_url = f'https://drive.google.com/uc?export=download&id={file_id}'
+df = pd.read_csv(download_url)
+print(df.head())  # Opcional: muestra las primeras filas para verificar la carga
+
+from flask import Flask, jsonify, request, render_template
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler
 from sklearn.metrics import mean_squared_error, r2_score, f1_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier
-from pandas import DataFrame
 import matplotlib.pyplot as plt
 import io
 import base64
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
-import json
 import logging
 
 # Configuración del logger
@@ -33,43 +26,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-FILE_ID = '10TT3lXJFz3zN5WNAtXQFdKki6qjE5LJ0'  # Reemplazar con el ID de tu archivo
-
-def obtener_servicio_drive():
-    """Inicializar el servicio de Google Drive"""
-    try:
-        creds = service_account.Credentials.from_service_account_info(
-            json.load(open('credentials.json')), 
-            scopes=SCOPES
-        )
-        service = build('drive', 'v3', credentials=creds)
-        return service
-    except Exception as e:
-        logger.error(f"Error al inicializar el servicio de Drive: {str(e)}")
-        raise
-
-def get_csv_from_drive():
-    """Descargar y leer el archivo CSV desde Google Drive"""
-    try:
-        service = obtener_servicio_drive()
-        request = service.files().get_media(fileId=FILE_ID)
-        
-        file = io.BytesIO()
-        downloader = MediaIoBaseDownload(file, request)
-        done = False
-        
-        while not done:
-            status, done = downloader.next_chunk()
-            
-        file.seek(0)
-        df = pd.read_csv(file)
-        return df
-        
-    except Exception as e:
-        logger.error(f"Error al obtener el archivo CSV de Drive: {str(e)}")
-        raise
 
 def train_val_test_split(df, rstate=42, shuffle=True, stratify=None):
     strat = df[stratify] if stratify else None
@@ -92,9 +48,6 @@ def index():
 @app.route('/action/<action>', methods=['GET'])
 def action(action):
     try:
-        # Leer el dataset desde Drive
-        df = get_csv_from_drive()
-        
         if action == 'load_data':
             data_head = df.head(10).to_html()
             return jsonify({"message": "Datos cargados desde Drive", "data": data_head})
@@ -112,8 +65,7 @@ def action(action):
             
             scaler = RobustScaler()
             X_train_scaled = scaler.fit_transform(X_train)
-            X_train_scaled = DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index)
-            data_scaled_head = X_train_scaled.head(10).to_html()
+            data_scaled_head = pd.DataFrame(X_train_scaled, columns=X_train.columns).head(10).to_html()
             
             return jsonify({"message": "Dataset dividido y escalado", "scaled_data": data_scaled_head})
         
@@ -140,9 +92,6 @@ def action(action):
 @app.route('/train', methods=['POST'])
 def train_model():
     try:
-        # Leer el dataset desde Drive
-        df = get_csv_from_drive()
-        
         # Convertir la columna 'calss' a valores numéricos
         df['calss'], _ = pd.factorize(df['calss'])
         
@@ -164,13 +113,6 @@ def train_model():
             random_state=42
         )
         rf_model.fit(X_train, y_train)
-        
-        sample_size = 5000
-        if len(X_test) > sample_size:
-            X_test_sample = X_test[:sample_size]
-            y_test_sample = y_test[:sample_size]
-        else:
-            X_test_sample = X_test
         
         y_pred = rf_model.predict(X_test)
         mse = mean_squared_error(y_test, y_pred)
