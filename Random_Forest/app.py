@@ -1,3 +1,14 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+import os
+
+data_dir = '/content/drive/MyDrive/Colab Notebooks'
+
+import pandas as pd
+
+df = pd.read_csv(os.path.join(data_dir, 'TotalFeatures-ISCXFlowMeter.csv'))
+
 import os
 from flask import Flask, jsonify, request, render_template, send_file
 import pandas as pd
