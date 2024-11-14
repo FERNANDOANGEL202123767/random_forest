@@ -117,7 +117,7 @@ def train_model():
         
         # Regresión Forestal
         rf_model = RandomForestRegressor(
-            n_estimators=5,
+            n_estimators=5000,
             max_depth=10,
             min_samples_split=5,
             min_samples_leaf=2,
