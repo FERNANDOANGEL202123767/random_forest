@@ -15,7 +15,7 @@ import os
 app = Flask(__name__)
 
 # Configurar la ruta del dataset
-DATA_PATH = os.path.join('data', 'reduced.csv')
+DATA_PATH = os.path.join('data', 'archivo_optimizado.csv')
 
 # Funciones auxiliares
 def train_val_test_split(df, rstate=42, shuffle=True, stratify=None):
@@ -117,7 +117,7 @@ def train_model():
         
         # Regresión Forestal
         rf_model = RandomForestRegressor(
-            n_estimators=100,
+            n_estimators=5,
             max_depth=10,
             min_samples_split=5,
             min_samples_leaf=2,
