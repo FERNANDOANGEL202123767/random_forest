@@ -8,9 +8,14 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            background-color: #2e2e2e;
+            color: #f0f0f0;
         }
         h1 {
-            color: #4CAF50;
+            color: #00adb5;
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 20px;
         }
         .button {
             padding: 10px 20px;
@@ -19,21 +24,33 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
+            background-color: #393e46;
+            color: #eeeeee;
+            transition: background-color 0.3s, transform 0.2s;
+            display: inline-block;
         }
         .button:hover {
-            background-color: #45a049;
+            background-color: #00adb5;
+            transform: scale(1.05);
         }
         .output {
             margin-top: 20px;
+            background-color: #393e46;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .output h2 {
+            color: #00adb5;
+            margin-bottom: 10px;
         }
         .output table {
             width: 100%;
             border-collapse: collapse;
+            background-color: #2e2e2e;
+            color: #f0f0f0;
         }
         .output table, .output th, .output td {
-            border: 1px solid black;
+            border: 1px solid #00adb5;
         }
         .output th, .output td {
             padding: 10px;
@@ -42,6 +59,8 @@
         .output img {
             width: 100%;
             height: auto;
+            border-radius: 5px;
+            margin-top: 10px;
         }
     </style>
 </head>
